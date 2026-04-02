@@ -12,7 +12,7 @@ def get_token(client, username: str, password: str = "test1234") -> str:
     return response.json()["access_token"]
 
 def test_post_score(client):
-    token = get_token(client, f"s1_{uuid.uuid4().hex[:6]}")
+    token = get_token(client, f"test_{uuid.uuid4().hex[:6]}")
     response = client.post(
         "/scores",
         json={"score": 1000},
@@ -26,7 +26,7 @@ def test_post_score_unauthenticated(client):
     assert response.status_code == 401
 
 def test_score_only_updates_if_higher(client):
-    token = get_token(client, f"s2_{uuid.uuid4().hex[:6]}")
+    token = get_token(client, f"test_{uuid.uuid4().hex[:6]}")
     headers = {"Authorization": f"Bearer {token}"}
     client.post("/scores", json={"score": 500}, headers=headers)
     client.post("/scores", json={"score": 200}, headers=headers)
