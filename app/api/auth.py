@@ -21,13 +21,20 @@ def signup(body: UserRegister):
     conn = get_conn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # username 중복 확인
             cur.execute("SELECT 1 FROM public.users WHERE username = %s", (body.username,))
             if cur.fetchone():
                 raise HTTPException(status_code=409, detail="Username already exists")
-            
+
+            # nickname 중복 확인
+            cur.execute("SELECT 1 FROM public.users WHERE nickname = %s", (body.nickname,))
+            if cur.fetchone():
+                raise HTTPException(status_code=409, detail="Nickname already exists")
+
             cur.execute(
-                "INSERT INTO public.users (username, password_hash) VALUES (%s, %s)",
-                (body.username, hash_password(body.password))
+                """INSERT INTO public.users (username, password_hash, nickname)
+                   VALUES (%s, %s, %s)""",
+                (body.username, hash_password(body.password), body.nickname)
             )
         conn.commit()
         return {"ok": True, "message": "Signup successful"}
@@ -50,10 +57,10 @@ def login(body: UserLogin):
                 (body.username,)
             )
             user = cur.fetchone()
-        
+
         if not user or not verify_password(body.password, user["password_hash"]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
+
         return TokenResponse(access_token=create_access_token(user["username"]))
     except HTTPException:
         raise
