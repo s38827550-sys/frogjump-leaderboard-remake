@@ -1,9 +1,12 @@
 import uuid
 
 def get_token(client, username: str, password: str = "test1234") -> str:
+    nickname = f"nick_{uuid.uuid4().hex[:6]}"
+    
     client.post("/auth/signup", json={
         "username": username,
-        "password": password
+        "password": password,
+        "nickname": nickname
     })
     response = client.post("/auth/login", json={
         "username": username,
