@@ -19,7 +19,7 @@ def get_my_profile(username: str = Depends(get_current_user)):
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT username, nickname, points, last_attendance, created_at
+                SELECT username, nickname, points, last_attendance, created_at, role, status
                 FROM public.users
                 WHERE username = %s
             """, (username,))

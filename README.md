@@ -2,7 +2,7 @@
 
 > 게임 클라이언트와 연동되는 백엔드 서버
 > JWT 인증 기반 유저 시스템과 실시간 랭킹 API를 제공합니다.
-
+[![CI](https://github.com/s38827550-sys/frogjump-leaderboard-remake/actions/workflows/ci.yml/badge.svg)](https://github.com/s38827550-sys/frogjump-leaderboard-remake/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Render](https://img.shields.io/badge/Render-000000?style=flat&logo=render&logoColor=white)](https://render.com)
