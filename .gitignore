@@ -1,6 +1,25 @@
-.env
-.venv/
+# Python 관련
 __pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# 환경 변수 (절대 금지!)
+.env
+.env.local
+
+# 테스트 및 빌드
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# 데이터베이스 (SQLite 사용 시)
+*.sqlite3
 *.db
-*.pyc
+
+# IDE 설정 (개인 설정이므로 공유하지 않는 편이 좋음)
 .vscode/
+.idea/
