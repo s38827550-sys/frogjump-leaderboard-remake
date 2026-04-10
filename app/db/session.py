@@ -9,17 +9,25 @@ connection_pool = None
 def init_pool():
     global connection_pool
     url = settings.DATABASE_URL
+
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
-    
+
+    # 🔥 핵심: 환경별 sslmode 분기
+    if "localhost" in url or "127.0.0.1" in url:
+        ssl_mode = "disable"
+    else:
+        ssl_mode = "require"
+
     connection_pool = pool.ThreadedConnectionPool(
         minconn=1,
         maxconn=10,
         dsn=url,
         connect_timeout=10,
-        sslmode='require'
+        sslmode=ssl_mode
     )
-    logger.info("✅ Connection pool initialized.")
+
+    logger.info(f"✅ Connection pool initialized. (sslmode={ssl_mode})")
 
 def get_conn():
     if connection_pool is None:
