@@ -19,6 +19,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS public.users (
                     username TEXT PRIMARY KEY,
                     password_hash TEXT NOT NULL,
+                    nickname TEXT UNIQUE,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
             """)
