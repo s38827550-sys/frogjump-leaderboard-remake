@@ -13,11 +13,7 @@ def init_pool():
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
 
-    # 🔥 핵심: 환경별 sslmode 분기
-    if "localhost" in url or "127.0.0.1" in url:
-        ssl_mode = "disable"
-    else:
-        ssl_mode = "require"
+    ssl_mode = "require" if "supabase" in url else "disable"
 
     connection_pool = pool.ThreadedConnectionPool(
         minconn=1,
@@ -29,10 +25,39 @@ def init_pool():
 
     logger.info(f"✅ Connection pool initialized. (sslmode={ssl_mode})")
 
+def reset_pool():
+    global connection_pool
+
+    try:
+        if connection_pool:
+            connection_pool.closeall()
+    except Exception:
+        pass
+
+    init_pool()
+    logger.info("🔄 Connection pool reset")
+
 def get_conn():
     if connection_pool is None:
         raise RuntimeError("Connection pool not initialized.")
-    return connection_pool.getconn()
+
+    conn = connection_pool.getconn()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+    except Exception:
+        logger.warning("⚠️ Dead connection detected. Resetting pool...")
+
+        try:
+            connection_pool.putconn(conn, close=True)
+        except Exception:
+            pass
+
+        reset_pool()
+        conn = connection_pool.getconn()
+
+    return conn
 
 def release_conn(conn):
     if connection_pool:
