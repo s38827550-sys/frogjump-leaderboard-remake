@@ -1,4 +1,5 @@
 from psycopg2 import pool
+from psycopg2 import OperationalError, InterfaceError
 from app.core.config import settings
 import logging
 
@@ -8,6 +9,10 @@ connection_pool = None
 
 def init_pool():
     global connection_pool
+
+    if connection_pool is not None:
+        return
+
     url = settings.DATABASE_URL
 
     if url.startswith("postgres://"):
@@ -25,40 +30,38 @@ def init_pool():
 
     logger.info(f"✅ Connection pool initialized. (sslmode={ssl_mode})")
 
-def reset_pool():
-    global connection_pool
-
-    try:
-        if connection_pool:
-            connection_pool.closeall()
-    except Exception:
-        pass
-
-    init_pool()
-    logger.info("🔄 Connection pool reset")
 
 def get_conn():
-    if connection_pool is None:
-        raise RuntimeError("Connection pool not initialized.")
+    global connection_pool
 
-    conn = connection_pool.getconn()
+    if connection_pool is None:
+        init_pool()
 
     try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT 1")
-    except Exception:
-        logger.warning("⚠️ Dead connection detected. Resetting pool...")
-
-        try:
-            connection_pool.putconn(conn, close=True)
-        except Exception:
-            pass
-
-        reset_pool()
         conn = connection_pool.getconn()
 
-    return conn
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+
+        return conn
+
+    except (OperationalError, InterfaceError) as e:
+        logger.error(f"❌ DB connection error: {e}")
+
+        # 죽은 커넥션만 폐기
+        try:
+            connection_pool.putconn(conn, close=True)
+        except (OperationalError, InterfaceError):
+            pass
+
+        # 새 커넥션 재시도
+        conn = connection_pool.getconn()
+
+        return conn
+
 
 def release_conn(conn):
-    if connection_pool:
+    global connection_pool
+
+    if connection_pool and conn:
         connection_pool.putconn(conn)
