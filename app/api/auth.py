@@ -47,13 +47,14 @@ def signup(body: UserRegister):
     finally:
         release_conn(conn)
 
-@router.post("/login", response_model=TokenResponse)
+# auth.py - login 엔드포인트 수정
+@router.post("/login")
 def login(body: UserLogin):
     conn = get_conn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT username, password_hash FROM public.users WHERE username = %s",
+                "SELECT username, password_hash, nickname FROM public.users WHERE username = %s",
                 (body.username,)
             )
             user = cur.fetchone()
@@ -61,7 +62,11 @@ def login(body: UserLogin):
         if not user or not verify_password(body.password, user["password_hash"]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        return TokenResponse(access_token=create_access_token(user["username"]))
+        return {
+            "access_token": create_access_token(user["username"]),
+            "username": user["username"],
+            "nickname": user["nickname"]   
+        }
     except HTTPException:
         raise
     except Exception as e:
